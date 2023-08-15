@@ -36,7 +36,7 @@ public interface NdrXmlStatusRepository extends JpaRepository<NdrXmlStatus, Inte
 			"\t\t\t\t INNER JOIN base_organisation_unit facility_state ON facility_state.id=facility_lga.parent_organisation_unit_id\n" +
 			"\t\t\t\t LEFT JOIN base_organisation_unit res_state ON res_state.id=r.stateid\\:\\:BIGINT\n" +
 			"\t\t\t\t LEFT JOIN base_organisation_unit res_lga ON res_lga.id=r.lgaid\\:\\:BIGINT\n" +
-			"\t\t\t\t INNER JOIN base_organisation_unit_identifier boui ON boui.organisation_unit_id=facility_id\n" +
+			"\t\t\t\t INNER JOIN base_organisation_unit_identifier boui ON boui.organisation_unit_id=facility_id AND name ='DATIM_ID' \n" +
 			"\t\t\t\t INNER JOIN hiv_enrollment h ON h.person_uuid = p.uuid\n" +
 			"\t\t\t\t WHERE h.archived=0 AND p.uuid=?1",
 			nativeQuery = true)
@@ -183,8 +183,9 @@ public interface NdrXmlStatusRepository extends JpaRepository<NdrXmlStatus, Inte
 	
 	@Query (value = "select last_modified from ndr_xml_status where \n" +
 			"facility_id = ?1\n" +
+			"AND type = ?2\n" +
 			"order by last_modified desc limit 1", nativeQuery = true)
-	 Optional<Timestamp> getLastGenerateDateTimeByFacilityId(Long facilityId);
+	 Optional<Timestamp> getLastGenerateDateTimeByFacilityId(Long facilityId, String Type);
 
 	@Query (value = "SELECT * FROM public.ndr_xml_status ORDER BY  id DESC", nativeQuery = true)
 	List<NdrXmlStatus> getAllFiles();

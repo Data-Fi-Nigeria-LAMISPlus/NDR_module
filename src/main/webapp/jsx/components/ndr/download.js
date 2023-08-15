@@ -137,6 +137,7 @@ export default function DownloadNdr(props) {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
+        console.log(response);
         window.setTimeout(() => {
           toast.success(" Uploading To NDR Successful!");
           setModal(false);

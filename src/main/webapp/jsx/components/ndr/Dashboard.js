@@ -192,36 +192,36 @@ const HomePage = (props) => {
             {...a11yProps(0)}
           />
 
-          <Tab
+          {/* <Tab
             className={classes.title}
             label="HTS XML"
             icon={<MdContacts />}
             {...a11yProps(1)}
-          />
+          /> */}
 
           <Tab
             className={classes.title}
             label="Biometrics XML"
             icon={<MdContacts />}
-            {...a11yProps(2)}
+            {...a11yProps(1)}
           />
           <Tab
             className={classes.title}
             label="Download Files"
             icon={<MdContacts />}
-            {...a11yProps(3)}
+            {...a11yProps(2)}
           />
           <Tab
             className={classes.title}
             label="NDR File Errors"
             icon={<ErrorIcon />}
-            {...a11yProps(4)}
+            {...a11yProps(3)}
           />
           <Tab
             className={classes.title}
             label="NDR COnfiguration"
             icon={<MdContacts />}
-            {...a11yProps(5)}
+            {...a11yProps(4)}
           />
         </Tabs>
         <div></div>
@@ -230,19 +230,19 @@ const HomePage = (props) => {
       <TabPanel value={value} setValue={setValue} index={0}>
         <GenerateNdr value={value} setValue={setValue} />
       </TabPanel>
-      <TabPanel value={value} setValue={setValue} index={1}>
+      {/* <TabPanel value={value} setValue={setValue} index={1}>
         <HTS value={value} setValue={setValue} />
-      </TabPanel>
-      <TabPanel value={value} setValue={setValue} index={2}>
+      </TabPanel> */}
+      <TabPanel value={value} setValue={setValue} index={1}>
         <Biometrics value={value} setValue={setValue} />
       </TabPanel>
-      <TabPanel value={value} setValue={setValue} index={3}>
+      <TabPanel value={value} setValue={setValue} index={2}>
         <DownloadNdr value={value} setValue={setValue} setErrors={setErrors} />
       </TabPanel>
-      <TabPanel value={value} setValue={setValue} index={4}>
+      <TabPanel value={value} setValue={setValue} index={3}>
         <ErrorPage value={value} setValue={setValue} errors={errors} />
       </TabPanel>
-      <TabPanel value={value} setValue={setValue} index={5}>
+      <TabPanel value={value} setValue={setValue} index={4}>
         <NdrConfiguration value={value} setValue={setValue} />
       </TabPanel>
     </div>

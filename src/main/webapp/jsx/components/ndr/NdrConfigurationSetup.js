@@ -67,7 +67,7 @@ const useStyles = makeStyles((theme) => ({
 
 const DatabaseSyn = (props) => {
   const classes = useStyles();
-  const defaultValues = { username: "", password: "", base_url: "" };
+  const defaultValues = { email: "", password: "", baseUrl: "" };
   //console.log(props)
   const [patDetails, setPatDetails] = useState(defaultValues);
   const [saving, setSaving] = useState(false);
@@ -79,8 +79,8 @@ const DatabaseSyn = (props) => {
   /*****  Validation */
   const validate = () => {
     let temp = { ...errors };
-    temp.base_url = patDetails.base_url ? "" : "Base Url is required";
-    temp.username = patDetails.username ? "" : "Username is required";
+    temp.baseUrl = patDetails.baseUrl ? "" : "Base Url is required";
+    temp.email = patDetails.email ? "" : "email is required";
     temp.password = patDetails.password ? "" : "Password is required";
 
     setErrors({
@@ -94,11 +94,9 @@ const DatabaseSyn = (props) => {
     if (validate()) {
       setSaving(true);
       axios
-        .post(
-          `${baseUrl}ndr-emr/auto-push-configuration?username=${patDetails.username}&password=${patDetails.password}`,
-          patDetails,
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
+        .post(`${baseUrl}ndr-emr/auto-push-configuration`, patDetails, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
         .then((response) => {
           setSaving(false);
           props.NdrSetup();
@@ -147,14 +145,14 @@ const DatabaseSyn = (props) => {
                       <Label>Base URL </Label>
                       <Input
                         type="text"
-                        name="base_url"
-                        id="base_url"
-                        value={patDetails.base_url}
+                        name="baseUrl"
+                        id="baseUrl"
+                        value={patDetails.baseUrl}
                         onChange={handleInputChange}
                         required
                       />
-                      {errors.base_url !== "" ? (
-                        <span className={classes.error}>{errors.base_url}</span>
+                      {errors.baseUrl !== "" ? (
+                        <span className={classes.error}>{errors.baseUrl}</span>
                       ) : (
                         ""
                       )}
@@ -162,17 +160,17 @@ const DatabaseSyn = (props) => {
                   </Col>
                   <Col md={12}>
                     <FormGroup>
-                      <Label>Username </Label>
+                      <Label>Email </Label>
                       <Input
                         type="text"
-                        name="username"
-                        id="username"
-                        value={patDetails.username}
+                        name="email"
+                        id="email"
+                        value={patDetails.email}
                         onChange={handleInputChange}
                         required
                       />
-                      {errors.username !== "" ? (
-                        <span className={classes.error}>{errors.username}</span>
+                      {errors.email !== "" ? (
+                        <span className={classes.error}>{errors.email}</span>
                       ) : (
                         ""
                       )}

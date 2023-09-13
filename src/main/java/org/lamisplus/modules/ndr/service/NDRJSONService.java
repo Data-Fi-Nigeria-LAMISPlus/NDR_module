@@ -37,13 +37,18 @@ import java.util.*;
 @Slf4j
 public class NDRJSONService {
     //TODO: Save the hard-coded values in database
+    String pingUrl = "https://emr-ndrpushsandbox.phis3project.org.ng/api/Cronbox/v1/utils/ping";
+    
+    //"https://emr-ndrpush.phis3project.org.ng/api/Cronbox";
 
     private final int BATCHMAX = 10;
-    String baseUrl = "https://emr-ndrpushsandbox.phis3project.org.ng";
-    String pingEndPoint = "/v1/utils/ping";
-    String authEndPoint = "/api/Cronbox/auth";
-    String pushEndPoint = "/api/Cronbox/beep";
-    String logsEndPoint = "/api/Cronbox/errorLogs";
+    String authEndPoint = "/auth";
+    String pushEndPoint = "/beep";
+    String logsEndPoint = "/errorLogs";
+   // String baseUrl = "http://ndrstaging.phis3project.org.ng:8087/api/Cronbox";
+    String baseUrl = "https://emr-ndrpushsandbox.phis3project.org.ng/api/Cronbox";
+    String email = "nonye.nwanya@thepalladiumgroup.com";
+    String password = "]W(I*=v}-+z8h$F";
 
     private final NDRPusherRepository ndrPusherRepository;
 
@@ -67,8 +72,8 @@ public class NDRJSONService {
     //ping NDR server
     public String PingNDRServer() {
         HttpEntity<String> entity = new HttpEntity<>("{}", GetHTTPHeaders());
-        ResponseEntity<NDRPingResponseDTO> response = GetRestTemplate().exchange(baseUrl + pingEndPoint,
-                HttpMethod.GET, entity, NDRPingResponseDTO.class);
+        ResponseEntity<NDRPingResponseDTO> response = GetRestTemplate().exchange(pingUrl, HttpMethod.GET,
+                entity, NDRPingResponseDTO.class);
         NDRPingResponseDTO responseDTO = response.getBody();
         return "success";
     }
@@ -80,6 +85,7 @@ public class NDRJSONService {
         HttpEntity<NDRAuthRequestDTO> loginEntity = new HttpEntity<>(loginRequestDTO, GetHTTPHeaders());
         ResponseEntity<NDRAuthResponseDTO> response = GetRestTemplate().exchange(baseUrl + authEndPoint,
                 HttpMethod.POST, loginEntity, NDRAuthResponseDTO.class);
+        log.info("url {}  data {}", baseUrl + authEndPoint, response.getBody());
         return response.getBody();
     }
 
@@ -139,12 +145,17 @@ public class NDRJSONService {
     }
 
     private String GetJWT() {
+        //TODO: Check if token exists and is valid (less than 7 days)
+        //return token
+        //else
+        //login to NDR and get new token
+        //save token in DB
+        //return token
         Optional<User> currentUser = this.userService.getUserWithRoles();
         if (currentUser.isPresent()) {
-            Long facilityId = currentUser.get().getCurrentOrganisationUnitId();;
+            Long facilityId = currentUser.get().getCurrentOrganisationUnitId();
             Optional<NDRPusherConfig> ndrPusherConfigOptional = ndrPusherConfigRepository.findByFacilityId(facilityId);
             if (ndrPusherConfigOptional.isPresent()) {
-                baseUrl = ndrPusherConfigOptional.get().getBaseUrl();
                 NDRAuthResponseDTO authResponseDTO = AuthenticateUser(ndrPusherConfigOptional.get().getUsername(), ndrPusherConfigOptional.get().getPassword());
                 return authResponseDTO.getToken();
             }
@@ -152,7 +163,7 @@ public class NDRJSONService {
         return "no token";
     }
 
-    public NDRPusherConfig save(String username, String password, String baseUrl) {
+    public NDRPusherConfig save(String username, String password) {
         NDRPusherConfig ndrPusherConfig = new NDRPusherConfig();
         Optional<User> currentUser = this.userService.getUserWithRoles();
         User user = (User) currentUser.get();
@@ -160,7 +171,6 @@ public class NDRJSONService {
         ndrPusherConfig.setPassword(password);
         ndrPusherConfig.setUsername(username);
         ndrPusherConfig.setFacilityId(facilityId);
-        ndrPusherConfig.setBaseUrl(baseUrl);
         return ndrPusherConfigRepository.save(ndrPusherConfig);
     }
 
@@ -191,7 +201,6 @@ public class NDRJSONService {
                 NDRPusherConfig ndrPusherConfig = ndrPusherConfigOptional.get();
                 ndrPusherConfig.setPassword(ndrAuthRequestDTO.getPassword());
                 ndrPusherConfig.setUsername(ndrAuthRequestDTO.getEmail());
-                ndrPusherConfig.setBaseUrl(ndrAuthRequestDTO.getBaseUrl());
                 //ndrPusherConfig.setFacilityId(facilityId);
                 return ndrPusherConfigRepository.save(ndrPusherConfig);
             }
@@ -229,6 +238,7 @@ public class NDRJSONService {
             return ndrPusherConfigOptional.get();
         }
         return null;
+
     }
 
     @SneakyThrows
@@ -247,18 +257,14 @@ public class NDRJSONService {
         }
         try {
             String identifier = ndrXmlStatusRepository.findById(id).get().getPushIdentifier();
-            double yet2bePushed = ndrMessagesRepository.findNDRMessagesByIsPushedAndFacilityIdAndIdentifier(Boolean.FALSE, facilityId, identifier).size();
-            double totalRecords = ndrMessagesRepository.getTotalRecordByFacilityAndIdentifier(facilityId, identifier);
+            int yet2bePushed = ndrMessagesRepository.findNDRMessagesByIsPushedAndFacilityIdAndIdentifier(Boolean.FALSE, facilityId, identifier).size();
+            int totalRecords = ndrMessagesRepository.getTotalRecordByFacilityAndIdentifier(facilityId, identifier);
             double percentage = 0.0;
-            if (totalRecords > 0) percentage =  (((totalRecords - yet2bePushed) / totalRecords) * 100.0);
+            if (totalRecords > 0) percentage =  (((totalRecords - yet2bePushed) / totalRecords) * 100);
             per = (int) Math.ceil(percentage);
+            //Long
+        } catch (Exception e) {
         }
-        catch (Exception e) {
-
-        }
-
-        Long per2 = new Long(per+"");
-        Log.info("Percentage: "+per2);
         return new Long(String.valueOf(per));
     }
 
@@ -284,7 +290,7 @@ public class NDRJSONService {
                         ndrMessagesRepository.findNDRMessagesByIsPushedAndFacilityIdAndIdentifier(Boolean.FALSE, facilityId, identifier);
                 Iterator iterator = ndrMessagesList.iterator();
                 int size = ndrMessagesList.size();
-                System.out.println("Token gotten " + size);
+                log.info("container size :" + size);
                 int batches = 0;
                 int counter = 0;
                 List<String> data = new ArrayList<>();
@@ -303,17 +309,15 @@ public class NDRJSONService {
                             messages.add(msg);
                         }
                         NDRDataResponseDTO ndrDataResponseDTO = PushData(token, data);
-                        Log.info("BATCH_RESPONSE: "+ndrDataResponseDTO);
                         if (ndrDataResponseDTO.getMessage().contains("success")) {
                             //msg.setIsPushed(Boolean.TRUE);
                             //msg.setMessageDate(LocalDate.now());
                             //ndrMessagesRepository.save(msg);
-                            Log.info("Batch push success");
-
+                            log.info("data:{}", ndrDataResponseDTO);
+                            log.info("batchId from server : {}", ndrDataResponseDTO.getBatchNumber());
                             for (NDRMessages message:messages) {
                                 message.setIsPushed(Boolean.TRUE);
                                 message.setMessageDate(LocalDate.now());
-                                message.setBatchNumber(ndrDataResponseDTO.getBatchNumber());
                             }
                             ndrMessagesRepository.saveAll(messages);
 
